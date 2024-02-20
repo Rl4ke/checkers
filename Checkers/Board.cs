@@ -25,8 +25,9 @@ namespace Checkers
         public int Cwidth { get; set; }
         public int Cheight { get; set; }
         public Cell[,] arr;
+        public GameManager gameManager { get; set; }
 
-        public Board(int left, int top, int width, int height, int lines, int cols)
+        public Board(int left, int top, int width, int height, int lines, int cols, GameManager gameManager)
         {
             Left = left;
             Top = top;
@@ -36,7 +37,9 @@ namespace Checkers
             Cols = cols;
             Cwidth = 125;
             Cheight = 160;
+
             Initialize();
+            this.gameManager = gameManager;
         }
         private void Initialize()
         {
@@ -52,9 +55,8 @@ namespace Checkers
             {
                 for(int j = 0; j < Cols; j++)
                 {
-                    arr[i, j] = new Cell(x, y, Cwidth, Cheight, Cell.KindEnum.Empty, (i + j) % 2 == 0 ? b1 : b2,null);
-                    //arr[i, j].b = (i + j) % 2 == 0 ? b1 : b2;
-                    
+                    arr[i, j] = new Cell(x, y, Cwidth, Cheight, Cell.KindEnum.Empty, (i + j) % 2 == 0 ? b1 : b2 ,null);
+
                     x += Cwidth;
                 }
                 y += Cheight;
@@ -67,9 +69,9 @@ namespace Checkers
         {
             Paint paint = new Paint();
             Android.Graphics.Bitmap recordBitmap1, recordBitmap2,b;
-            recordBitmap1 = Android.Graphics.BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.darkredman);
-            recordBitmap2 = Android.Graphics.BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whiteman);
-            b = Android.Graphics.BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.blacksquare);
+            recordBitmap1 = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.darkredman);
+            recordBitmap2 = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whiteman);
+            b = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.blacksquare);
             b = Android.Graphics.Bitmap.CreateScaledBitmap(b, Cwidth, Cheight, false);
 
             for (int i = 0; i < Lines; i++)
@@ -82,12 +84,13 @@ namespace Checkers
                        Rect rect = new Rect(currentCell.left, currentCell.top,
                                              currentCell.left + currentCell.width, currentCell.top + currentCell.height);
 
-            
                        // Draw the cell on the canvas
                        canvas.DrawBitmap(currentCell.b, null, rect, paint);
+                       arr[i, j].Man = new Man(i, j, GameManager.Player.None);
                 }
             }
-            for (int i = 0; i < 3; i++)
+
+            for (int i = 0; i < 3; i++) 
             {
                 for (int j = 0; j < Cols; j++)
                 {
@@ -101,13 +104,15 @@ namespace Checkers
                         // Draw the "darkredman" image on top
                         Rect recordRect = new Rect(arr[i, j].left, arr[i, j].top,
                                                    arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
-                        Man man = new Man(i, j, recordBitmap1);
                         canvas.DrawBitmap(recordBitmap1, null, recordRect, paint);
+                        arr[i, j].kind = Cell.KindEnum.Occupied;
+                        arr[i, j].Man = new Man(i, j, GameManager.Player.Black);
                     }
 
                 }
-            }
-            for(int i = 3; i < 5; i++) 
+            } // blackman placement
+
+            for (int i = 3; i < 5; i++) 
             {
                 for (int j = 0; j < Cols; j++)
                 {
@@ -123,6 +128,7 @@ namespace Checkers
 
                 }
             }
+
             for (int i = 5; i < 8; i++)
             {
                 for (int j = 0; j < Cols; j++)
@@ -133,23 +139,24 @@ namespace Checkers
                         Rect rect = new Rect(arr[i, j].left, arr[i, j].top,
                                               arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
                         canvas.DrawBitmap(arr[i, j].b, null, rect, paint);
-            
+
                         // Draw the "whiteman" on the bottom of the board
                         Rect recordRect = new Rect(arr[i, j].left, arr[i, j].top,
                                                    arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
-                        Man man = new Man(i, j, recordBitmap2);
                         canvas.DrawBitmap(recordBitmap2, null, recordRect, paint);
+                        arr[i, j].kind = Cell.KindEnum.Occupied;
+
+                        arr[i, j].Man = new Man(i, j, GameManager.Player.White);
                     }
             
                 }
-            }
+            } // whiteman placement
         }
         public Cell GetCellAtCoordinates(int x, int y)
         {
             int row = (y - Top) / Cheight;
             int col = (x - Left) / Cwidth;
 
-            // Check if it's within bounds
             if (row >= 0 && row < Lines && col >= 0 && col < Cols)
             {
                 return arr[row, col];
@@ -157,24 +164,33 @@ namespace Checkers
 
             return null;
         }
-        public void Move()
-        {
 
-        }
-        public Tuple<int, int> GetSquareIndicesAtCoordinates(int x, int y)
+        public void MovePiece(int startX, int startY, int endX, int endY)
         {
-            // Calculate the row and column indices based on touch coordinates
-            int row = (y - Top) / Cheight;
-            int col = (x - Left) / Cwidth;
+            Cell startCell = GetCellAtCoordinates(startX, startY);
+            Cell endCell = GetCellAtCoordinates(endX, endY);
 
-            // Check if it's within bounds
-            if (row >= 0 && row < Lines && col >= 0 && col < Cols)
+            if (startCell != null && endCell != null && IsValidMove(startCell, endCell))
             {
-                return new Tuple<int, int>(row, col);
+                UpdateBoardState(startCell, endCell);
             }
-
-            // the coordinates are outside the board
-            return null;
         }
+
+        private bool IsValidMove(Cell startCell, Cell endCell)
+        {
+            if (endCell.kind == Cell.KindEnum.Occupied)
+                return false;
+            if(endCell.b.Equals(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whitesquare))) //the movement is only on black squares
+                return false;
+
+            return true;
+        }
+
+        private void UpdateBoardState(Cell startCell, Cell endCell)
+        {
+            endCell.Man = startCell.Man;
+            startCell.Cancel();
+        }
+
     }
 }

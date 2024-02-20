@@ -22,22 +22,22 @@ namespace Checkers
             this.gameManager = gameManager;
             this.paintView = paintView;
         }
-
         public bool OnTouch(View v, MotionEvent e)
         {
-            if (e.Action == MotionEventActions.Up)
+            if (e.Action == Android.Views.MotionEventActions.Down)
             {
+                
                 int selectedX = (int)e.GetX();
                 int selectedY = (int)e.GetY();
                 Cell CurrentselectedCell = gameManager.GetCellAtCoordinates(selectedX, selectedY);
-
+                
                 if (CurrentselectedCell != null && CurrentselectedCell.kind == Cell.KindEnum.Empty)
                 {
-                    int destinatedCellX = (int)e.GetX();
-                    int destinatedCellY = (int)e.GetY();
-                    int row = 0;
-                    int col = 0;
-                    for(int i = 0; i < gameManager.BoardGame.Lines;i++)
+                    int destinatedCellX = (int)e.GetX(), destinatedCellY = (int)e.GetY();
+                
+                    int row = 0, col = 0;
+                
+                    for (int i = 0; i < gameManager.BoardGame.Lines;i++)
                     {
                         for(int j = 0; j < gameManager.BoardGame.Cols;j++)
                         {
@@ -49,7 +49,7 @@ namespace Checkers
                         }
                     }
                     Cell destinationCell = gameManager.BoardGame.arr[row,col];
-
+                
                     // updating the cell contents
                     destinationCell.b = CurrentselectedCell.b;
                     CurrentselectedCell.Cancel();

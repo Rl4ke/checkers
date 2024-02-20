@@ -45,5 +45,6 @@ namespace Checkers
             this.Man = null;
         }
 
+
     }
 }

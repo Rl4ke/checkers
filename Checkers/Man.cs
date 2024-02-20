@@ -1,6 +1,7 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.Graphics;
+using Android.Media;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
@@ -23,18 +24,16 @@ namespace Checkers
         private int Y;
         public Bitmap manBitmap { get; set; }
         private Context context;
-        private PieceType Type;
+        public GameManager.Player player { get; set; }
 
-        public Man(int x, int y, Bitmap b) : base(x,y,b)
+        public Man(int x, int y, GameManager.Player player) : base(x,y, player)
         {
             this.X = x;
             this.Y = y;
-            this.manBitmap = b;
-            if(this.manBitmap != null ) 
+            if(this.player != GameManager.Player.None) 
             {
-                if (this.manBitmap.Equals(Android.Graphics.BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.darkredman)))
-                    Type = PieceType.DarkMan;
-                else Type = PieceType.WhiteMan;
+                if (this.player == GameManager.Player.White) manBitmap = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whiteman);
+                else manBitmap = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.darkredman);
             }
         }
         public void Draw(Canvas c)

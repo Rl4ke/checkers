@@ -23,7 +23,7 @@ namespace Checkers
         {
             this.context = context;
             this.gameManager = new GameManager(570, 570, 8, 8);
-            SetOnTouchListener(new MoveTouchListener(gameManager, this));
+            //SetOnTouchListener(new MoveTouchListener(gameManager, this));
         }
         protected override void OnDraw(Canvas canvas)
         {
@@ -36,6 +36,15 @@ namespace Checkers
             //canvas.DrawBitmap(pieceBitmap, 0,0, null);
             //piece.Draw(canvas);
         }
+        public override bool OnTouchEvent(MotionEvent e)
+        {
+            if (e.Action == MotionEventActions.Move)
+            {
+                float x = e.GetX();
+            }
+            return gameManager.OnTouch(this,e);
+        }
+
     }
 
 }

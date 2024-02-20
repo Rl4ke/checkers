@@ -21,18 +21,11 @@ namespace Checkers
         private int Y { get; set; }
 
         private Bitmap bitmap;
-        public PieceType Type { get; set; }
-        public Piece(int x, int y, Bitmap bitmap)
+        public GameManager.Player player { get; set; }
+        public Piece(int x, int y, GameManager.Player player)
         {
             this.X = x; 
             this.Y = y;
-            this.bitmap = bitmap;
-            //this.Type = type;
         }
-    }
-    internal enum PieceType
-    {
-        WhiteMan,
-        DarkMan
     }
 }

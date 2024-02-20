@@ -13,7 +13,7 @@ namespace Checkers
             base.OnCreate(savedInstanceState);
 
             Xamarin.Essentials.Platform.Init(this, savedInstanceState);
-            SetContentView(new PaintView(this));
+            SetContentView(GameManager());
         }
     }
 }
