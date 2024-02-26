@@ -1,26 +1,25 @@
 ﻿using Android.App;
 using Android.Content;
-using Android.Graphics;
-using Android.Net.Wifi.Aware;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
-using Bitmap = Android.Graphics.Bitmap;
 
 namespace Checkers
 {
-    internal class Piece
+    public class Position
     {
-        public Player player { get; set; }
-        public Piece(Player player)
+        public int Row { get; }
+        public int Column { get; }
+
+        public Position(int row, int column)
         {
-            this.player = player;
+            Row = row;
+            Column = column;
         }
     }
 }

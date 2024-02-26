@@ -11,186 +11,91 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using Android.Graphics;
+using Android.Hardware.Lights;
+using static Android.Icu.Text.ListFormatter;
+using Android.Bluetooth;
+using System.Runtime.CompilerServices;
 
 namespace Checkers
 {
     internal class Board
     {
-        public int Left { get; }
-        public int Top { get; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public int Lines { get; set; }
-        public int Cols { get; set; }
-        public int Cwidth { get; set; }
-        public int Cheight { get; set; }
-        public Cell[,] arr;
-        public GameManager gameManager { get; set; }
 
-        public Board(int left, int top, int width, int height, int lines, int cols, GameManager gameManager)
+        private readonly Piece[,] pieces = new Piece[8, 8];
+        public Piece this[int row, int col]
         {
-            Left = left;
-            Top = top;
-            Width = width;
-            Height = height;
-            Lines = lines;
-            Cols = cols;
-            Cwidth = 125;
-            Cheight = 160;
-
-            Initialize();
-            this.gameManager = gameManager;
-        }
-        private void Initialize()
-        {
-            arr = new Cell[Lines, Cols];
-            int x = Left, y = Top;
-            Android.Graphics.Bitmap b1, b2;
-            b1 = Android.Graphics.BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whitesquare);
-            b1 = Android.Graphics.Bitmap.CreateScaledBitmap(b1, Cwidth, Cheight, false);
-            b2 = Android.Graphics.BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.blacksquare);
-            b2 = Android.Graphics.Bitmap.CreateScaledBitmap(b2, Cwidth, Cheight, false);
-
-            for (int i = 0; i < Lines; i++)
+            get 
             {
-                for(int j = 0; j < Cols; j++)
-                {
-                    arr[i, j] = new Cell(x, y, Cwidth, Cheight, Cell.KindEnum.Empty, (i + j) % 2 == 0 ? b1 : b2 ,null);
-
-                    x += Cwidth;
-                }
-                y += Cheight;
-                x = Left;
+                if (pieces[row, col] == null) return new Man(Player.None);
+                return pieces[row, col]; 
             }
-
+            set { pieces[row, col] = value; }
+        }
+        public Board()
+        {
+            StartPieces();
         }
 
-        public void Draw(Canvas canvas)
+        public void StartPieces()
         {
-            Paint paint = new Paint();
-            Android.Graphics.Bitmap recordBitmap1, recordBitmap2,b;
-            recordBitmap1 = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.darkredman);
-            recordBitmap2 = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whiteman);
-            b = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.blacksquare);
-            b = Android.Graphics.Bitmap.CreateScaledBitmap(b, Cwidth, Cheight, false);
+            this[0, 1] = new Man(Player.White);
+            this[0, 3] = new Man(Player.White);
+            this[0, 5] = new Man(Player.White);
+            this[0, 7] = new Man(Player.White);
+            this[1, 0] = new Man(Player.White);
+            this[1, 2] = new Man(Player.White);
+            this[1, 4] = new Man(Player.White);
+            this[1, 6] = new Man(Player.White);
+            this[2, 1] = new Man(Player.White);
+            this[2, 3] = new Man(Player.White);
+            this[2, 5] = new Man(Player.White);
+            this[2, 7] = new Man(Player.White);
 
-            for (int i = 0; i < Lines; i++)
-            {
-                for (int j = 0; j < Cols; j++)
-                {
-                       Cell currentCell = arr[i, j];
-            
-                       // Draw a rectangle for each cell
-                       Rect rect = new Rect(currentCell.left, currentCell.top,
-                                             currentCell.left + currentCell.width, currentCell.top + currentCell.height);
-
-                       // Draw the cell on the canvas
-                       canvas.DrawBitmap(currentCell.b, null, rect, paint);
-                       arr[i, j].Man = new Man(i, j, GameManager.Player.None);
-                }
-            }
-
-            for (int i = 0; i < 3; i++) 
-            {
-                for (int j = 0; j < Cols; j++)
-                {
-                    if ((i + j) % 2 != 0)
-                    {
-                        // Draw the square
-                        Rect rect = new Rect(arr[i, j].left, arr[i, j].top,
-                                              arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
-                        canvas.DrawBitmap(arr[i, j].b, null, rect, paint);
-
-                        // Draw the "darkredman" image on top
-                        Rect recordRect = new Rect(arr[i, j].left, arr[i, j].top,
-                                                   arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
-                        canvas.DrawBitmap(recordBitmap1, null, recordRect, paint);
-                        arr[i, j].kind = Cell.KindEnum.Occupied;
-                        arr[i, j].Man = new Man(i, j, GameManager.Player.Black);
-                    }
-
-                }
-            } // blackman placement
-
-            for (int i = 3; i < 5; i++) 
-            {
-                for (int j = 0; j < Cols; j++)
-                {
-                    if ((i + j) % 2 != 0)
-                    {
-                        // Draw the square
-                        Rect rect = new Rect(arr[i, j].left, arr[i, j].top,
-                                              arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
-                        canvas.DrawBitmap(arr[i, j].b, null, rect, paint);
-                        arr[i, j] = new Cell(i, j, Cwidth, Cheight, Cell.KindEnum.Empty,b, null);
-
-                    }
-
-                }
-            }
-
-            for (int i = 5; i < 8; i++)
-            {
-                for (int j = 0; j < Cols; j++)
-                {
-                    if ((i + j) % 2 != 0)
-                    {
-                        // Draw the square
-                        Rect rect = new Rect(arr[i, j].left, arr[i, j].top,
-                                              arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
-                        canvas.DrawBitmap(arr[i, j].b, null, rect, paint);
-
-                        // Draw the "whiteman" on the bottom of the board
-                        Rect recordRect = new Rect(arr[i, j].left, arr[i, j].top,
-                                                   arr[i, j].left + arr[i, j].width, arr[i, j].top + arr[i, j].height);
-                        canvas.DrawBitmap(recordBitmap2, null, recordRect, paint);
-                        arr[i, j].kind = Cell.KindEnum.Occupied;
-
-                        arr[i, j].Man = new Man(i, j, GameManager.Player.White);
-                    }
-            
-                }
-            } // whiteman placement
-        }
-        public Cell GetCellAtCoordinates(int x, int y)
-        {
-            int row = (y - Top) / Cheight;
-            int col = (x - Left) / Cwidth;
-
-            if (row >= 0 && row < Lines && col >= 0 && col < Cols)
-            {
-                return arr[row, col];
-            }
-
-            return null;
+            this[5, 0] = new Man(Player.Black);
+            this[5, 2] = new Man(Player.Black);
+            this[5, 4] = new Man(Player.Black);
+            this[5, 6] = new Man(Player.Black);
+            this[6, 1] = new Man(Player.Black);
+            this[6, 3] = new Man(Player.Black);
+            this[6, 5] = new Man(Player.Black);
+            this[6, 7] = new Man(Player.Black);
+            this[7, 0] = new Man(Player.Black);
+            this[7, 2] = new Man(Player.Black);
+            this[7, 4] = new Man(Player.Black);
+            this[7, 6] = new Man(Player.Black);
         }
 
-        public void MovePiece(int startX, int startY, int endX, int endY)
+        public void Move(Player CurrentPlayer, int currentRow, int currentColumn, int newRow, int newColumn)
         {
-            Cell startCell = GetCellAtCoordinates(startX, startY);
-            Cell endCell = GetCellAtCoordinates(endX, endY);
+            if (!InBoard(newRow, newColumn)) return;
+            if (pieces[newRow, newColumn].player != Player.None) return;
 
-            if (startCell != null && endCell != null && IsValidMove(startCell, endCell))
+            if (IsDiagonal(currentRow, currentColumn, newRow, newColumn))
             {
-                UpdateBoardState(startCell, endCell);
+                pieces[newRow, newColumn].player = CurrentPlayer;
+                pieces[currentRow, currentColumn].player = Player.None;
             }
         }
-
-        private bool IsValidMove(Cell startCell, Cell endCell)
+        public static bool IsDiagonal(int currentRow, int currentColumn, int newRow, int newColumn)
         {
-            if (endCell.kind == Cell.KindEnum.Occupied)
-                return false;
-            if(endCell.b.Equals(BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whitesquare))) //the movement is only on black squares
-                return false;
-
-            return true;
+            return Math.Abs(newRow - currentRow) == Math.Abs(newColumn - currentColumn);
+        }
+        public static bool InBoard(int row, int column)
+        {
+            return (row >= 0 && column >= 0) && (row < 8 && column < 8);
         }
 
-        private void UpdateBoardState(Cell startCell, Cell endCell)
+        public static int[] PositionFromStr(string pos)
         {
-            endCell.Man = startCell.Man;
-            startCell.Cancel();
-        }
+            char[] posStr = pos.ToCharArray();
+            int[] posInt = new int[2];
 
+            for (int i = 0; i < 2; i++)
+            {
+                posInt[i] = int.Parse(posStr[i].ToString());
+            }
+
+            return posInt;
+        }
     }
 }

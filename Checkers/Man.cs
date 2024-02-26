@@ -20,27 +20,24 @@ namespace Checkers
 {
     internal class Man : Piece
     {
-        private int X;
-        private int Y;
         public Bitmap manBitmap { get; set; }
         private Context context;
-        public GameManager.Player player { get; set; }
+        public Player player { get; set; }
 
-        public Man(int x, int y, GameManager.Player player) : base(x,y, player)
+        public Man(Player player) : base(player)
         {
-            this.X = x;
-            this.Y = y;
-            if(this.player != GameManager.Player.None) 
+            if (this.player != Player.None)
             {
-                if (this.player == GameManager.Player.White) manBitmap = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whiteman);
+                if (this.player == Player.White) manBitmap = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.whiteman);
                 else manBitmap = BitmapFactory.DecodeResource(Application.Context.Resources, Resource.Drawable.darkredman);
             }
+            else manBitmap = null;
         }
         public void Draw(Canvas c)
         {
             if (c != null && manBitmap != null)
             {
-                c.DrawBitmap(manBitmap, X, Y, null);
+                //c.DrawBitmapMesh(manBitmap, null);
             }
         }
 
