@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using static Checkers.Board;
 using Bitmap = Android.Graphics.Bitmap;
 
 namespace Checkers
@@ -18,6 +19,7 @@ namespace Checkers
     internal class Piece
     {
         public Player player { get; set; }
+        public BackgroundColor bc { get; set; }
         public Piece(Player player)
         {
             this.player = player;

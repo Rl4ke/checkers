@@ -15,7 +15,9 @@ namespace Checkers
     {
         None,
         White,
-        Black
+        Black,
+        KingW,
+        KingB
     }
 
 }

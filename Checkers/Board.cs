@@ -1,19 +1,4 @@
-﻿using Android.App;
-using Android.Content;
-using Android.Net.Wifi.Aware;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using Android.Graphics;
-using Android.Hardware.Lights;
-using static Android.Icu.Text.ListFormatter;
-using Android.Bluetooth;
+﻿using System;
 using System.Runtime.CompilerServices;
 
 namespace Checkers
@@ -31,6 +16,12 @@ namespace Checkers
             }
             set { pieces[row, col] = value; }
         }
+        public enum BackgroundColor
+        {
+            White,
+            Black
+        }
+        public BackgroundColor bc { get; set; }
         public Board()
         {
             StartPieces();
@@ -65,24 +56,99 @@ namespace Checkers
             this[7, 6] = new Man(Player.Black);
         }
 
-        public void Move(Player CurrentPlayer, int currentRow, int currentColumn, int newRow, int newColumn)
+        public void Move(Position fromPos, Position toPos)
         {
-            if (!InBoard(newRow, newColumn)) return;
-            if (pieces[newRow, newColumn].player != Player.None) return;
+            if (!InBoard(toPos.Row, toPos.Column)) return;
 
-            if (IsDiagonal(currentRow, currentColumn, newRow, newColumn))
+            if (pieces[toPos.Row, toPos.Column] == null)
             {
-                pieces[newRow, newColumn].player = CurrentPlayer;
-                pieces[currentRow, currentColumn].player = Player.None;
+                if (CanCaptureOpponent(this[fromPos.Row, fromPos.Column].player, fromPos.Row, fromPos.Column, toPos.Row, toPos.Column))
+                {
+                    PerformMove(toPos.Row, toPos.Column, fromPos.Row, fromPos.Column);
+                }
+                else
+                {
+                    PerformMove(toPos.Row, toPos.Column, fromPos.Row, fromPos.Column);
+                }
+
+                if(IsKing(toPos.Row, toPos.Column))
+                {
+                    if (this[fromPos.Row, fromPos.Column].player == Player.White) this[toPos.Row, toPos.Column].player = Player.KingW;
+                    else this[toPos.Row, toPos.Column].player = Player.KingB;
+                }
+            }
+
+        }
+
+        private void PerformMove(int toRow, int toColumn, int fromRow, int fromColumn)
+        {
+            if (IsDiagonal(fromRow, fromColumn, toRow, toColumn) && IsOneSpaceMove(toRow, toColumn, fromRow, fromColumn))
+            {
+                this[toRow, toColumn] = this[fromRow, fromColumn];
+                this[fromRow, fromColumn] = null;
             }
         }
+
+        private bool IsOneSpaceMove(int toRow, int toColumn, int fromRow, int fromColumn)
+        {
+            // Check if the move is one space horizontally or vertically
+            return Math.Abs(toRow - fromRow) == 1 && Math.Abs(toColumn - fromColumn) == 1;
+        }
+
         public static bool IsDiagonal(int currentRow, int currentColumn, int newRow, int newColumn)
         {
             return Math.Abs(newRow - currentRow) == Math.Abs(newColumn - currentColumn);
         }
+
         public static bool InBoard(int row, int column)
         {
             return (row >= 0 && column >= 0) && (row < 8 && column < 8);
+        }
+
+        public bool IsEmptyCell(int row, int column)
+        {
+            return this[row, column].player == Player.None;
+        }
+
+        public bool IsKing(int row, int column)
+        {
+            if (row == 0 && this[row, column].player == Player.Black)
+            {
+                for(int i = 1; i <= 7; i += 2)
+                {
+                    if (this[0, i].player == Player.Black) { return true; } 
+                }
+            }
+            if (row == 7 && this[row, column].player == Player.White)
+            {
+                for(int i = 0; i <= 6; i += 2)
+                {
+                    if (this[7, i].player == Player.White) { return true; }
+                }
+            }
+            return false;
+        }
+
+        public bool CanCaptureOpponent(Player currentPlayer, int fromRow, int fromColumn, int toRow, int toColumn)
+        {
+            if (!InBoard(toRow, toColumn)) return false;
+
+            if (IsDiagonal(fromRow, fromColumn, toRow, toColumn) && Math.Abs(toRow - fromRow) == 2 && Math.Abs(toColumn - fromColumn) == 2)
+            {
+                int capturedRow = (fromRow + toRow) / 2;
+                int capturedColumn = (fromColumn + toColumn) / 2;
+
+                if (this[capturedRow, capturedColumn].player != currentPlayer && this[capturedRow, capturedColumn].player != Player.None
+                    && IsEmptyCell(toRow, toColumn))
+                {
+                    this[toRow, toColumn] = this[fromRow, fromColumn];
+                    this[capturedRow, capturedColumn] = null;
+                    this[fromRow, fromColumn] = null;
+                        
+                    return true;
+                }
+            }
+            return false;
         }
 
         public static int[] PositionFromStr(string pos)
