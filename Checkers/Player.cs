@@ -16,8 +16,6 @@ namespace Checkers
         None,
         White,
         Black,
-        KingW,
-        KingB
     }
 
 }

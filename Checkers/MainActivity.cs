@@ -55,12 +55,10 @@ namespace Checkers
                     if ((j + i) % 2 == 1)
                     {
                         buttonView.SetBackgroundColor(Resources.GetColor(Resource.Color.m3_ref_palette_black));
-                        board.bc = Board.BackgroundColor.Black;
                     }
                     else
                     {
                         buttonView.SetBackgroundColor(Resources.GetColor(Resource.Color.m3_ref_palette_white));
-                        board.bc = Board.BackgroundColor.White;
                     }
 
                     buttonView.Click += SquareClick;
@@ -85,7 +83,7 @@ namespace Checkers
                 fromPos = pos;
                 return;
             }
-            if(toPos == null)
+            if (toPos == null)
             {
                 toPos = pos; 
                 board.Move(fromPos, toPos);
@@ -104,11 +102,20 @@ namespace Checkers
                     ImageButton ib = (ImageButton)((FrameLayout)checkersBoard.GetChildAt(8 * i + j)).GetChildAt(0);
 
                     Piece piece = board[i, j];
+
                     if (piece == null) piece = new Piece(Player.None);
-                    if (piece.player == Player.White) ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.whiteman, Theme));
-                    else if(piece.player == Player.Black) ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.darkredman, Theme));
-                    else if(piece.player == Player.KingW) ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.crown1, Theme));
-                    else if (piece.player == Player.KingB) ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.crown2, Theme));
+
+                    if (piece.player == Player.White)
+                    {
+                        if (piece.isKing) ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.whiteking, Theme));
+                        else ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.whiteman, Theme));
+
+                    }
+                    else if (piece.player == Player.Black) 
+                    {
+                        if (piece.isKing) ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.darkredking, Theme));
+                        else ib.SetImageDrawable(Resources.GetDrawable(Resource.Drawable.darkredman, Theme)); 
+                    }
                     else ib.SetImageDrawable(null);
                 }
             }

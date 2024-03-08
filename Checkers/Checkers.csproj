@@ -62,7 +62,6 @@
   <ItemGroup>
     <Compile Include="Board.cs" />
     <Compile Include="GameState.cs" />
-    <Compile Include="King.cs" />
     <Compile Include="MainActivity.cs" />
     <Compile Include="Man.cs" />
     <Compile Include="Piece.cs" />
@@ -103,18 +102,12 @@
     <AndroidResource Include="Resources\mipmap-xxxhdpi\ic_launcher_round.png" />
   </ItemGroup>
   <ItemGroup>
-    <AndroidResource Include="Resources\drawable\crown2.png" />
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.6.1.6" />
     <PackageReference Include="Xamarin.Forms">
       <Version>5.0.0.2622</Version>
     </PackageReference>
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.10.0.2" />
     <PackageReference Include="Xamarin.Essentials" Version="1.8.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\drawable\crown1.png" />
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\darkredman.png" />
@@ -129,6 +122,12 @@
   </ItemGroup>
   <ItemGroup>
     <AndroidResource Include="Resources\drawable\border.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\darkredking.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AndroidResource Include="Resources\drawable\whiteking.png" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it.

@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Android.Bluetooth;
+using System;
 using System.Runtime.CompilerServices;
 
 namespace Checkers
 {
     internal class Board
     {
-
-        private readonly Piece[,] pieces = new Piece[8, 8];
+        public readonly Piece[,] pieces = new Piece[8, 8];
         public Piece this[int row, int col]
         {
             get 
@@ -16,12 +16,7 @@ namespace Checkers
             }
             set { pieces[row, col] = value; }
         }
-        public enum BackgroundColor
-        {
-            White,
-            Black
-        }
-        public BackgroundColor bc { get; set; }
+
         public Board()
         {
             StartPieces();
@@ -71,13 +66,8 @@ namespace Checkers
                     PerformMove(toPos.Row, toPos.Column, fromPos.Row, fromPos.Column);
                 }
 
-                if(IsKing(toPos.Row, toPos.Column))
-                {
-                    if (this[fromPos.Row, fromPos.Column].player == Player.White) this[toPos.Row, toPos.Column].player = Player.KingW;
-                    else this[toPos.Row, toPos.Column].player = Player.KingB;
-                }
+                IsKing(toPos.Row, toPos.Column);
             }
-
         }
 
         private void PerformMove(int toRow, int toColumn, int fromRow, int fromColumn)
@@ -116,17 +106,17 @@ namespace Checkers
             {
                 for(int i = 1; i <= 7; i += 2)
                 {
-                    if (this[0, i].player == Player.Black) { return true; } 
+                    if (this[0, i].player == Player.Black) { this[0, i].isKing = true; } 
                 }
             }
             if (row == 7 && this[row, column].player == Player.White)
             {
                 for(int i = 0; i <= 6; i += 2)
                 {
-                    if (this[7, i].player == Player.White) { return true; }
+                    if (this[7, i].player == Player.White) { this[7, i].isKing = true; }
                 }
             }
-            return false;
+            return this[row, column].isKing;
         }
 
         public bool CanCaptureOpponent(Player currentPlayer, int fromRow, int fromColumn, int toRow, int toColumn)
