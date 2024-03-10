@@ -1,6 +1,4 @@
-﻿using Android.Bluetooth;
-using System;
-using System.Runtime.CompilerServices;
+﻿using System;
 
 namespace Checkers
 {
@@ -16,6 +14,8 @@ namespace Checkers
             }
             set { pieces[row, col] = value; }
         }
+
+        public int currentDirection = 1; // 1 = downwards, -1 = upwards
 
         public Board()
         {
@@ -54,12 +54,21 @@ namespace Checkers
         public void Move(Position fromPos, Position toPos)
         {
             if (!InBoard(toPos.Row, toPos.Column)) return;
+            Piece movingPiece = this[fromPos.Row, fromPos.Column];
+            currentDirection = (movingPiece.player == Player.Black || movingPiece.player == Player.White) ? -1 : 1;
 
             if (pieces[toPos.Row, toPos.Column] == null)
             {
+
                 if (CanCaptureOpponent(this[fromPos.Row, fromPos.Column].player, fromPos.Row, fromPos.Column, toPos.Row, toPos.Column))
                 {
                     PerformMove(toPos.Row, toPos.Column, fromPos.Row, fromPos.Column);
+
+                    if (CanMakeDoubleJump(toPos.Row, toPos.Column))
+                    {
+                        //IsKing(toPos.Row + 2, toPos.Column + 2);
+                        Move(toPos, new Position(toPos.Row + 2, toPos.Column + 2));
+                    }
                 }
                 else
                 {
@@ -72,32 +81,57 @@ namespace Checkers
 
         private void PerformMove(int toRow, int toColumn, int fromRow, int fromColumn)
         {
-            if (IsDiagonal(fromRow, fromColumn, toRow, toColumn) && IsOneSpaceMove(toRow, toColumn, fromRow, fromColumn))
+            Piece movingPiece = this[fromRow, fromColumn];
+            int direction = (movingPiece.player == Player.White) ? 1 : -1;
+
+            if (IsDiagonal(fromRow, fromColumn, toRow, toColumn) && IsOneSpaceMove(toRow, toColumn, fromRow, fromColumn) && movingPiece.isKing)
             {
-                this[toRow, toColumn] = this[fromRow, fromColumn];
-                this[fromRow, fromColumn] = null;
+                    this[toRow, toColumn] = this[fromRow, fromColumn];
+                    this[fromRow, fromColumn] = null;
+            }
+            else
+            {
+                if (direction == 1 && toRow > fromRow || direction == -1 && toRow < fromRow)
+                {
+                    if (IsDiagonal(fromRow, fromColumn, toRow, toColumn) && IsOneSpaceMove(toRow, toColumn, fromRow, fromColumn))
+                    {
+                        this[toRow, toColumn] = this[fromRow, fromColumn];
+                        this[fromRow, fromColumn] = null;
+                    }
+                }
             }
         }
 
-        private bool IsOneSpaceMove(int toRow, int toColumn, int fromRow, int fromColumn)
+        public bool CanMakeDoubleJump(int fromRow, int fromColumn)
         {
-            // Check if the move is one space horizontally or vertically
-            return Math.Abs(toRow - fromRow) == 1 && Math.Abs(toColumn - fromColumn) == 1;
-        }
+            Player currentPlayer = this[fromRow, fromColumn].player;
+            int direction = (currentPlayer == Player.White) ? 1 : -1;
 
-        public static bool IsDiagonal(int currentRow, int currentColumn, int newRow, int newColumn)
-        {
-            return Math.Abs(newRow - currentRow) == Math.Abs(newColumn - currentColumn);
-        }
+            for (int dr = -2; dr <= 2; dr += 4)
+            {
+                for (int dc = -2; dc <= 2; dc += 4)
+                {
+                    //if (dr * direction <= 0 || dc * direction <= 0)
+                        //continue;
 
-        public static bool InBoard(int row, int column)
-        {
-            return (row >= 0 && column >= 0) && (row < 8 && column < 8);
-        }
+                    int toRow = fromRow + dr;
+                    int toColumn = fromColumn + dc;
+                    int capturedRow = fromRow + dr / 2;
+                    int capturedColumn = fromColumn + dc / 2;
 
-        public bool IsEmptyCell(int row, int column)
-        {
-            return this[row, column].player == Player.None;
+                    if (InBoard(toRow, toColumn) && IsEmptyCell(toRow, toColumn) &&
+                        CanCaptureOpponent(currentPlayer, fromRow, fromColumn, toRow, toColumn))
+                    {
+                        if (this[capturedRow, capturedColumn]?.player != currentPlayer &&
+                            this[capturedRow, capturedColumn]?.player != Player.None)
+                        {
+                            if (CanMakeDoubleJump(toRow, toColumn))
+                                return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         public bool IsKing(int row, int column)
@@ -139,6 +173,27 @@ namespace Checkers
                 }
             }
             return false;
+        }
+
+        private bool IsOneSpaceMove(int toRow, int toColumn, int fromRow, int fromColumn)
+        {
+            // Check if the move is one space horizontally or vertically
+            return Math.Abs(toRow - fromRow) == 1 && Math.Abs(toColumn - fromColumn) == 1;
+        }
+
+        public static bool IsDiagonal(int currentRow, int currentColumn, int newRow, int newColumn)
+        {
+            return Math.Abs(newRow - currentRow) == Math.Abs(newColumn - currentColumn);
+        }
+
+        public static bool InBoard(int row, int column)
+        {
+            return (row >= 0 && column >= 0) && (row < 8 && column < 8);
+        }
+
+        public bool IsEmptyCell(int row, int column)
+        {
+            return this[row, column].player == Player.None;
         }
 
         public static int[] PositionFromStr(string pos)

@@ -72,7 +72,7 @@ namespace Checkers
 
         private void SquareClick(object sender, EventArgs e)
         {
-            if (gameState.CurrentPlayer != player) return;
+            //if (gameState.CurrentPlayer != player) return;
 
             string transitionName = ((View)sender).TransitionName;
             int[] sq = Board.PositionFromStr(transitionName);
