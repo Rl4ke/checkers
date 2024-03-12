@@ -15,8 +15,6 @@ namespace Checkers
             set { pieces[row, col] = value; }
         }
 
-        public int currentDirection = 1; // 1 = downwards, -1 = upwards
-
         public Board()
         {
             StartPieces();
@@ -54,12 +52,9 @@ namespace Checkers
         public void Move(Position fromPos, Position toPos)
         {
             if (!InBoard(toPos.Row, toPos.Column)) return;
-            Piece movingPiece = this[fromPos.Row, fromPos.Column];
-            currentDirection = (movingPiece.player == Player.Black || movingPiece.player == Player.White) ? -1 : 1;
 
             if (pieces[toPos.Row, toPos.Column] == null)
             {
-
                 if (CanCaptureOpponent(this[fromPos.Row, fromPos.Column].player, fromPos.Row, fromPos.Column, toPos.Row, toPos.Column))
                 {
                     PerformMove(toPos.Row, toPos.Column, fromPos.Row, fromPos.Column);
@@ -105,7 +100,6 @@ namespace Checkers
         public bool CanMakeDoubleJump(int fromRow, int fromColumn)
         {
             Player currentPlayer = this[fromRow, fromColumn].player;
-            int direction = (currentPlayer == Player.White) ? 1 : -1;
 
             for (int dr = -2; dr <= 2; dr += 4)
             {
@@ -122,6 +116,7 @@ namespace Checkers
                     if (InBoard(toRow, toColumn) && IsEmptyCell(toRow, toColumn) &&
                         CanCaptureOpponent(currentPlayer, fromRow, fromColumn, toRow, toColumn))
                     {
+                        IsKing(toRow, toColumn);
                         if (this[capturedRow, capturedColumn]?.player != currentPlayer &&
                             this[capturedRow, capturedColumn]?.player != Player.None)
                         {
