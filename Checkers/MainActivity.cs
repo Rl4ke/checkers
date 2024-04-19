@@ -4,7 +4,10 @@ using Android.Views;
 using Android.Widget;
 using AndroidX.AppCompat.App;
 using System;
+//using Firebase;
 using ImageButton = Android.Widget.ImageButton;
+using Android.Content;
+
 
 namespace Checkers
 {
@@ -16,16 +19,41 @@ namespace Checkers
         private GameState gameState;
         private Position toPos = null, fromPos = null;
         private Board board = new Board();
+        private TextView winnerTextView;
+        Button btnStartMusic;
+
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
-            
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.board);
 
-            gameState = new GameState(Player.Black, board);
+            //FirebaseApp.InitializeApp(this);
 
+            Window.DecorView.SetBackgroundColor(Android.Graphics.Color.Rgb(54, 69, 79));
+
+            
+            gameState = new GameState(Player.Black, board);
+            btnStartMusic = FindViewById<Button>(Resource.Id.btnStartMusic);
+            btnStartMusic.Click += BtnStart_Click;
             checkersBoard = FindViewById<GridLayout>(Resource.Id.checkersBoard);
+            winnerTextView = FindViewById<TextView>(Resource.Id.winner);
+            Result result = new Result(Player.White, Result.Reason.NoPlayers);
+
+            Player winner = board.winner;
+
+            if (winner != Player.None)
+            {
+                String winnerText = "Winner: " + (winner == Player.Black ? "Black" : "White");
+                winnerTextView.Text = winnerText;
+            }
+            else
+            {
+                winnerTextView.Text = "No winner";
+            }
+
+            //Intent intent = new Intent(this,typeof(LoginActivity));
+            //StartActivity(intent);
 
             BuildBoard();
         }
@@ -72,7 +100,6 @@ namespace Checkers
 
         private void SquareClick(object sender, EventArgs e)
         {
-            //if (gameState.CurrentPlayer != player) return;
 
             string transitionName = ((View)sender).TransitionName;
             int[] sq = Board.PositionFromStr(transitionName);
@@ -91,6 +118,12 @@ namespace Checkers
                 toPos = null;
                 DrawPieces();
             }
+        }
+
+        private void BtnStart_Click(object sender, EventArgs e)
+        {
+            Intent intent = new Intent(this, typeof(MusicActivity));
+            StartActivity(intent);
         }
 
         private void DrawPieces()

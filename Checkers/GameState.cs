@@ -20,16 +20,5 @@ namespace Checkers
             CurrentPlayer = player;
             Board = board;
         }
-        public int Direction()
-        {
-            int direction = 0;
-            if (CurrentPlayer == Player.Black)
-                direction = -1;
-            else
-            {
-                direction = 1;
-            }
-            return direction;
-        }
     }
 }

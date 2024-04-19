@@ -13,5 +13,28 @@
         android:layout_centerVertical="true"
         android:id="@id/checkersBoard">
     </GridLayout>
+    <RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    >
+        <TextView
+        android:layout_width="200dp"
+        android:layout_height="100px"
+        android:text="Winner:"
+        android:id="@+id/winner"
+        android:textSize="24sp"
+        android:gravity="center"
+    />
+
+    <Button
+        android:layout_width="200dp"
+        android:layout_height="wrap_content"
+        android:text="Start Music"
+        android:id="@+id/btnStartMusic"
+        android:layout_below="@id/winner" 
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+    />
+    </RelativeLayout>
 
 </RelativeLayout>

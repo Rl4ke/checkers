@@ -33,13 +33,5 @@ namespace Checkers
             }
             else manBitmap = null;
         }
-        public void Draw(Canvas c)
-        {
-            if (c != null && manBitmap != null)
-            {
-                //c.DrawBitmapMesh(manBitmap, null);
-            }
-        }
-
     }
 }

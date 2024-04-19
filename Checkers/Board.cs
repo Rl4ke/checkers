@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.NetworkInformation;
 
 namespace Checkers
 {
@@ -7,13 +8,15 @@ namespace Checkers
         public readonly Piece[,] pieces = new Piece[8, 8];
         public Piece this[int row, int col]
         {
-            get 
+            get
             {
                 if (pieces[row, col] == null) return new Man(Player.None);
-                return pieces[row, col]; 
+                return pieces[row, col];
             }
             set { pieces[row, col] = value; }
         }
+
+        public Player winner { get { return winner; } set { winner = Player.None; } }
 
         public Board()
         {
@@ -55,13 +58,12 @@ namespace Checkers
 
             if (pieces[toPos.Row, toPos.Column] == null)
             {
-                if (CanCaptureOpponent(this[fromPos.Row, fromPos.Column].player, fromPos.Row, fromPos.Column, toPos.Row, toPos.Column))
+                if (CanCaptureOpponent(this[fromPos.Row, fromPos.Column], fromPos.Row, fromPos.Column, toPos.Row, toPos.Column))
                 {
                     PerformMove(toPos.Row, toPos.Column, fromPos.Row, fromPos.Column);
 
                     if (CanMakeDoubleJump(toPos.Row, toPos.Column))
                     {
-                        //IsKing(toPos.Row + 2, toPos.Column + 2);
                         Move(toPos, new Position(toPos.Row + 2, toPos.Column + 2));
                     }
                 }
@@ -71,6 +73,9 @@ namespace Checkers
                 }
 
                 IsKing(toPos.Row, toPos.Column);
+
+                Result endresult = CheckWin();
+                this.winner = endresult.DetermineWinner();
             }
         }
 
@@ -97,26 +102,119 @@ namespace Checkers
             }
         }
 
+        public Result CheckWin()
+        {
+            bool blackPiecesExist = false;
+            bool whitePiecesExist = false;
+
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    Piece piece = pieces[row, col];
+                    if (piece != null)
+                    {
+                        if (piece.player == Player.Black)
+                            blackPiecesExist = true;
+                        else if (piece.player == Player.White)
+                            whitePiecesExist = true;
+                    }
+                }
+            }
+
+            bool blackCanMove = CanAnyPieceMove(Player.Black);
+            bool whiteCanMove = CanAnyPieceMove(Player.White);
+
+            if (blackPiecesExist && !whitePiecesExist)
+                return new Result(Player.Black, Result.Reason.NoPlayers); 
+            else if (!blackPiecesExist && whitePiecesExist)
+                return new Result(Player.White, Result.Reason.NoPlayers); 
+            else if (!blackCanMove)
+                return new Result(Player.White, Result.Reason.PlayerStuck); 
+            else if (!whiteCanMove)
+                return new Result(Player.Black, Result.Reason.PlayerStuck); 
+            else
+                return new Result(Player.None, Result.Reason.None);
+        }
+
+        private bool CanAnyPieceMove(Player player)
+        {
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    Piece piece = pieces[row, col];
+                    if (piece != null && piece.player == player)
+                    {
+                        if (CanMakeLegalMove(row, col, player))
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool CanMakeLegalMove(int fromRow, int fromColumn, Player currentPlayer)
+        {
+            Piece piece = pieces[fromRow, fromColumn];
+
+            if (piece == null || piece.player != currentPlayer)
+                return false;
+
+            bool isKing = piece.isKing;
+
+            int[] directions;
+
+            if (isKing)
+            {
+                directions = new int[] { -1, 1 };
+            }
+            else
+            {
+                directions = new int[] { currentPlayer == Player.White ? 1 : -1 };
+            }
+
+            foreach (int rowOffset in directions) // For each possible row movement
+            {
+                foreach (int colOffset in new int[] { -1, 1 }) // For each possible column movement
+                {
+                    int toRow = fromRow + rowOffset;
+                    int toColumn = fromColumn + colOffset;
+
+                    if (InBoard(toRow, toColumn))
+                    {
+                        if (IsEmptyCell(toRow, toColumn))
+                        {
+                            if (!isKing && rowOffset < 0)
+                                continue;
+
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
         public bool CanMakeDoubleJump(int fromRow, int fromColumn)
         {
-            Player currentPlayer = this[fromRow, fromColumn].player;
+            Piece currentPiece = this[fromRow, fromColumn];
+            Player currentPlayer = currentPiece.player;
 
             for (int dr = -2; dr <= 2; dr += 4)
             {
                 for (int dc = -2; dc <= 2; dc += 4)
                 {
-                    //if (dr * direction <= 0 || dc * direction <= 0)
-                        //continue;
-
                     int toRow = fromRow + dr;
                     int toColumn = fromColumn + dc;
                     int capturedRow = fromRow + dr / 2;
                     int capturedColumn = fromColumn + dc / 2;
 
                     if (InBoard(toRow, toColumn) && IsEmptyCell(toRow, toColumn) &&
-                        CanCaptureOpponent(currentPlayer, fromRow, fromColumn, toRow, toColumn))
+                        CanCaptureOpponent(currentPiece, fromRow, fromColumn, toRow, toColumn))
                     {
                         IsKing(toRow, toColumn);
+
                         if (this[capturedRow, capturedColumn]?.player != currentPlayer &&
                             this[capturedRow, capturedColumn]?.player != Player.None)
                         {
@@ -148,24 +246,37 @@ namespace Checkers
             return this[row, column].isKing;
         }
 
-        public bool CanCaptureOpponent(Player currentPlayer, int fromRow, int fromColumn, int toRow, int toColumn)
+        public bool CanCaptureOpponent(Piece currentPiece, int fromRow, int fromColumn, int toRow, int toColumn)
         {
             if (!InBoard(toRow, toColumn)) return false;
+            int direction = (currentPiece.player == Player.White) ? 1 : -1;
 
             if (IsDiagonal(fromRow, fromColumn, toRow, toColumn) && Math.Abs(toRow - fromRow) == 2 && Math.Abs(toColumn - fromColumn) == 2)
             {
                 int capturedRow = (fromRow + toRow) / 2;
                 int capturedColumn = (fromColumn + toColumn) / 2;
-
-                if (this[capturedRow, capturedColumn].player != currentPlayer && this[capturedRow, capturedColumn].player != Player.None
-                    && IsEmptyCell(toRow, toColumn))
+                if(this[capturedRow, capturedColumn].player != currentPiece.player && this[capturedRow, capturedColumn].player != Player.None
+                    && IsEmptyCell(toRow, toColumn) && currentPiece.isKing)
                 {
                     this[toRow, toColumn] = this[fromRow, fromColumn];
                     this[capturedRow, capturedColumn] = null;
                     this[fromRow, fromColumn] = null;
-                        
+
                     return true;
                 }
+                else
+                {
+                    if (this[capturedRow, capturedColumn].player != currentPiece.player && this[capturedRow, capturedColumn].player != Player.None
+                    && IsEmptyCell(toRow, toColumn) && (direction == 1 && toRow > fromRow || direction == -1 && toRow < fromRow))
+                    {
+                        this[toRow, toColumn] = this[fromRow, fromColumn];
+                        this[capturedRow, capturedColumn] = null;
+                        this[fromRow, fromColumn] = null;
+
+                        return true;
+                    }
+                }
+                
             }
             return false;
         }
