@@ -4,7 +4,10 @@ using Android.Views;
 using Android.Widget;
 using AndroidX.AppCompat.App;
 using System;
+//using Firebase;
 using ImageButton = Android.Widget.ImageButton;
+using Android.Content;
+
 
 namespace Checkers
 {
@@ -19,7 +22,6 @@ namespace Checkers
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
-            
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.board);
             checkersBoard = FindViewById<GridLayout>(Resource.Id.checkersBoard);
@@ -108,6 +110,12 @@ namespace Checkers
                 toPos = null;
                 DrawPieces();
             }
+        }
+
+        private void BtnStart_Click(object sender, EventArgs e)
+        {
+            Intent intent = new Intent(this, typeof(MusicActivity));
+            StartActivity(intent);
         }
 
         private void DrawPieces()

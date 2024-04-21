@@ -18,4 +18,5 @@ namespace Checkers
         Black,
     }
 
+
 }
