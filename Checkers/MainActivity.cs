@@ -12,21 +12,30 @@ namespace Checkers
     public class MainActivity : AppCompatActivity
     {
         GridLayout checkersBoard;
-        Player player = Player.Black;
-        private GameState gameState;
         private Position toPos = null, fromPos = null;
         private Board board = new Board();
+        private TextView winnerTextView;
+
 
         protected override void OnCreate(Bundle savedInstanceState)
         {
             
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.board);
-
-            gameState = new GameState(Player.Black, board);
-
             checkersBoard = FindViewById<GridLayout>(Resource.Id.checkersBoard);
+            winnerTextView = FindViewById<TextView>(Resource.Id.winner);
+            Result result = new Result(Player.White, Result.Reason.NoPlayers);
+            Player winner = board.winner;
 
+            if (winner != Player.None)
+            {
+                String winnerText = "Winner: " + (winner == Player.Black ? "Black" : "White");
+                winnerTextView.Text = winnerText;
+            }
+            else
+            {
+                winnerTextView.Text = "No winner";
+            }
             BuildBoard();
         }
 
@@ -72,11 +81,19 @@ namespace Checkers
 
         private void SquareClick(object sender, EventArgs e)
         {
-            //if (gameState.CurrentPlayer != player) return;
-
             string transitionName = ((View)sender).TransitionName;
             int[] sq = Board.PositionFromStr(transitionName);
             Position pos = new Position(sq[0], sq[1]);
+            Piece p = board.pieces[pos.Row, pos.Column];
+
+            if (p != null && p.player != board.player)
+            {
+                fromPos = null;
+                toPos = null;
+                return;
+            }
+
+            if (p == null && fromPos == null) return;
 
             if (fromPos == null)
             {

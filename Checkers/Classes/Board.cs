@@ -5,6 +5,8 @@ namespace Checkers
     internal class Board
     {
         public readonly Piece[,] pieces = new Piece[8, 8];
+        public Player player = Player.Black;
+        public Player winner { get { return winner; } set { winner = Player.None; } }
         public Piece this[int row, int col]
         {
             get 
@@ -51,6 +53,7 @@ namespace Checkers
 
         public void Move(Position fromPos, Position toPos)
         {
+            
             if (!InBoard(toPos.Row, toPos.Column)) return;
 
             if (pieces[toPos.Row, toPos.Column] == null)
@@ -64,13 +67,17 @@ namespace Checkers
                         //IsKing(toPos.Row + 2, toPos.Column + 2);
                         Move(toPos, new Position(toPos.Row + 2, toPos.Column + 2));
                     }
+                    player = player == Player.Black ? Player.White : Player.Black;
                 }
                 else
                 {
                     PerformMove(toPos.Row, toPos.Column, fromPos.Row, fromPos.Column);
+                    player = player == Player.Black ? Player.White : Player.Black;
                 }
 
                 IsKing(toPos.Row, toPos.Column);
+                Result endresult = CheckWin();
+                this.winner = endresult.DetermineWinner();
             }
         }
 
@@ -146,6 +153,100 @@ namespace Checkers
                 }
             }
             return this[row, column].isKing;
+        }
+
+        public Result CheckWin()
+        {
+            bool blackPiecesExist = false;
+            bool whitePiecesExist = false;
+
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    Piece piece = pieces[row, col];
+                    if (piece != null)
+                    {
+                        if (piece.player == Player.Black)
+                            blackPiecesExist = true;
+                        else if (piece.player == Player.White)
+                            whitePiecesExist = true;
+                    }
+                }
+            }
+
+            bool blackCanMove = CanAnyPieceMove(Player.Black);
+            bool whiteCanMove = CanAnyPieceMove(Player.White);
+
+            if (blackPiecesExist && !whitePiecesExist)
+                return new Result(Player.Black, Result.Reason.NoPlayers);
+            else if (!blackPiecesExist && whitePiecesExist)
+                return new Result(Player.White, Result.Reason.NoPlayers);
+            else if (!blackCanMove)
+                return new Result(Player.White, Result.Reason.PlayerStuck);
+            else if (!whiteCanMove)
+                return new Result(Player.Black, Result.Reason.PlayerStuck);
+            else
+                return new Result(Player.None, Result.Reason.None);
+        }
+
+        private bool CanAnyPieceMove(Player player)
+        {
+            for (int row = 0; row < 8; row++)
+            {
+                for (int col = 0; col < 8; col++)
+                {
+                    Piece piece = pieces[row, col];
+                    if (piece != null && piece.player == player)
+                    {
+                        if (CanMakeLegalMove(row, col, player))
+                            return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool CanMakeLegalMove(int fromRow, int fromColumn, Player currentPlayer)
+        {
+            Piece piece = pieces[fromRow, fromColumn];
+
+            if (piece == null || piece.player != currentPlayer)
+                return false;
+
+            bool isKing = piece.isKing;
+
+            int[] directions;
+
+            if (isKing)
+            {
+                directions = new int[] { -1, 1 };
+            }
+            else
+            {
+                directions = new int[] { currentPlayer == Player.White ? 1 : -1 };
+            }
+
+            foreach (int rowOffset in directions) // For each possible row movement
+            {
+                foreach (int colOffset in new int[] { -1, 1 }) // For each possible column movement
+                {
+                    int toRow = fromRow + rowOffset;
+                    int toColumn = fromColumn + colOffset;
+
+                    if (InBoard(toRow, toColumn))
+                    {
+                        if (IsEmptyCell(toRow, toColumn))
+                        {
+                            if (!isKing && rowOffset < 0)
+                                continue;
+
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
         }
 
         public bool CanCaptureOpponent(Player currentPlayer, int fromRow, int fromColumn, int toRow, int toColumn)
